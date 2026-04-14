@@ -1,0 +1,17 @@
+run_id,k,mse,mse_key,is_pareto,entity,project
+5nprxikb,16,0.2563760281,eval/mse,True,beattie-74-the-ohio-state-university,saev
+gvu3beic,16,0.3694223464,eval/mse,False,beattie-74-the-ohio-state-university,saev
+bswrrkdp,16,0.3748717308,eval/mse,False,beattie-74-the-ohio-state-university,saev
+u9wcrii2,16,0.619476378,eval/mse,False,beattie-74-the-ohio-state-university,saev
+kd7x14w7,32,0.3095955253,eval/mse,False,beattie-74-the-ohio-state-university,saev
+vejr20os,32,0.3344501555,eval/mse,False,beattie-74-the-ohio-state-university,saev
+nos9ghzf,32,0.3526335955,eval/mse,False,beattie-74-the-ohio-state-university,saev
+6tidnl5d,32,0.3982846737,eval/mse,False,beattie-74-the-ohio-state-university,saev
+czoq1od5,64,0.2699427307,eval/mse,False,beattie-74-the-ohio-state-university,saev
+ppbr2vgm,64,0.3123517632,eval/mse,False,beattie-74-the-ohio-state-university,saev
+yxpz7cvo,64,0.3353946209,eval/mse,False,beattie-74-the-ohio-state-university,saev
+qm4f991b,64,0.4415256083,eval/mse,False,beattie-74-the-ohio-state-university,saev
+xw306qml,128,0.2965025604,eval/mse,False,beattie-74-the-ohio-state-university,saev
+g5ny7sis,128,0.334173739,eval/mse,False,beattie-74-the-ohio-state-university,saev
+soa83fq8,128,0.3477672637,eval/mse,False,beattie-74-the-ohio-state-university,saev
+yjw5yx1z,128,0.3577697575,eval/mse,False,beattie-74-the-ohio-state-university,saev

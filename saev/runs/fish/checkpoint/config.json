@@ -1,0 +1,80 @@
+{
+  "train_data": {
+    "shards": "/local/scratch/beattie.74/saev_demo/saev/shards/02b05f61",
+    "tokens": "content",
+    "layer": -2,
+    "batch_size": 16384,
+    "drop_last": false,
+    "scale_norm": false,
+    "ignore_labels": [],
+    "n_threads": 4,
+    "buffer_size": 64,
+    "min_buffer_fill": 0.0,
+    "batch_timeout_s": 30.0,
+    "seed": 54,
+    "debug": false,
+    "log_every_s": 30.0,
+    "use_tmpdir": false
+  },
+  "val_data": {
+    "shards": "/local/scratch/beattie.74/saev_demo/saev/shards/02b05f61",
+    "tokens": "content",
+    "layer": -2,
+    "batch_size": 16384,
+    "drop_last": false,
+    "scale_norm": false,
+    "ignore_labels": [],
+    "n_threads": 4,
+    "buffer_size": 64,
+    "min_buffer_fill": 0.0,
+    "batch_timeout_s": 30.0,
+    "seed": 54,
+    "debug": false,
+    "log_every_s": 30.0,
+    "use_tmpdir": false
+  },
+  "n_train": 50000000,
+  "n_val": 10,
+  "sae": {
+    "d_model": 384,
+    "d_sae": 6144,
+    "activation": {
+      "key": "batch-top-k",
+      "top_k": 16,
+      "sparsity": {
+        "key": "no-sparsity"
+      },
+      "momentum": 0.1,
+      "aux": {
+        "key": "auxk",
+        "k_aux": 512,
+        "alpha": 0.03125
+      }
+    },
+    "reinit_blend": 0.8,
+    "reinit_enc_dec_tranpose": true,
+    "remove_parallel_grads": true,
+    "normalize_w_dec": true
+  },
+  "objective": {
+    "n_prefixes": 10,
+    "dead_threshold_tokens": 1000000
+  },
+  "n_sparsity_warmup": 0,
+  "optim": "adam",
+  "lr": 0.003,
+  "n_lr_warmup": 500,
+  "grad_clip": 1.0,
+  "track": true,
+  "wandb_project": "saev",
+  "tags": [],
+  "log_every": 25,
+  "runs_root": "/local/scratch/beattie.74/saev_demo/saev/runs",
+  "device": "cuda",
+  "seed": 54,
+  "slurm_acct": "",
+  "slurm_partition": "",
+  "n_hours": 24.0,
+  "mem_gb": 48,
+  "log_to": "./logs"
+}
