@@ -7,7 +7,6 @@ top-activating images per selected feature.
 
 import dataclasses
 import importlib
-import json
 import pathlib
 import typing as tp
 from collections.abc import Callable
@@ -21,6 +20,13 @@ from PIL import Image
 import saev.data.models
 import saev.data.shards
 import saev.nn
+
+
+MODEL_FAMILY = "dinov2"
+MODEL_CKPT = "dinov2_vits14_reg"
+MODEL_D = 384
+N_CONTENT_TOKENS = 256
+SAE_LAYER = -2
 
 
 @beartype.beartype
@@ -42,69 +48,51 @@ def get_streamlit():
 
 
 @beartype.beartype
-def resolve_run_paths(run_dpath: pathlib.Path) -> tuple[pathlib.Path, pathlib.Path]:
-    """Resolve config and checkpoint paths from a run directory."""
-    cfg_fpath = run_dpath / "checkpoint" / "config.json"
+def resolve_ckpt_path(run_dpath: pathlib.Path) -> pathlib.Path:
+    """Resolve SAE checkpoint path from a run directory."""
     ckpt_fpath = run_dpath / "checkpoint" / "sae.pt"
-    if cfg_fpath.is_file() and ckpt_fpath.is_file():
-        return cfg_fpath, ckpt_fpath
+    if ckpt_fpath.is_file():
+        return ckpt_fpath
 
-    cfg_fpath = run_dpath / "config.json"
     ckpt_fpath = run_dpath / "sae.pt"
-    if cfg_fpath.is_file() and ckpt_fpath.is_file():
-        return cfg_fpath, ckpt_fpath
+    if ckpt_fpath.is_file():
+        return ckpt_fpath
 
     msg = (
-        "Could not find run files. Expected either "
-        "<run>/checkpoint/{config.json,sae.pt} or <run>/{config.json,sae.pt}."
+        "Could not find SAE checkpoint. Expected either "
+        "<run>/checkpoint/sae.pt or <run>/sae.pt."
     )
     raise FileNotFoundError(msg)
 
 
 @beartype.beartype
 def load_models_from_run(run_dpath: pathlib.Path, device: str) -> LoadedModels:
-    cfg_fpath, ckpt_fpath = resolve_run_paths(run_dpath)
+    ckpt_fpath = resolve_ckpt_path(run_dpath)
 
-    with open(cfg_fpath) as fd:
-        cfg = tp.cast(dict[str, tp.Any], json.load(fd))
-
-    train_data = tp.cast(dict[str, tp.Any], cfg.get("train_data", {}))
-    shards_dpath = pathlib.Path(tp.cast(str, train_data.get("shards", "")))
-    msg = (
-        "Run config is missing train_data.shards, which is needed to recover "
-        "backbone model metadata."
-    )
-    assert str(shards_dpath) != "", msg
-    msg = f"Shards directory from run config does not exist: '{shards_dpath}'."
-    assert shards_dpath.is_dir(), msg
-
-    layer = int(train_data.get("layer", -2))
-    md = saev.data.shards.Metadata.load(shards_dpath)
-    msg = f"Layer {layer} is not available in metadata layers {md.layers}."
-    assert layer in md.layers, msg
-
-    model_cls = saev.data.models.load_model_cls(md.family)
+    model_cls = saev.data.models.load_model_cls(MODEL_FAMILY)
     preprocess, _sample_transform = model_cls.make_transforms(
-        md.ckpt, md.content_tokens_per_example
+        MODEL_CKPT, N_CONTENT_TOKENS
     )
-    resize = model_cls.make_resize(md.ckpt, md.content_tokens_per_example, scale=1.0)
+    resize = model_cls.make_resize(MODEL_CKPT, N_CONTENT_TOKENS, scale=1.0)
 
     make_model = tp.cast(tp.Callable[[str], tp.Any], model_cls)
-    backbone = make_model(md.ckpt).to(device).eval()
+    backbone = make_model(MODEL_CKPT).to(device).eval()
     recorder = saev.data.shards.RecordedTransformer(
         model=backbone,
-        content_tokens_per_example=md.content_tokens_per_example,
+        content_tokens_per_example=N_CONTENT_TOKENS,
         cls_token=True,
-        layers=(layer,),
+        layers=(SAE_LAYER,),
     ).to(device)
     recorder.eval()
 
     sae = saev.nn.load(ckpt_fpath, device=device).to(device).eval()
+    msg = f"Expected SAE d_model={MODEL_D}, got {sae.cfg.d_model}."
+    assert sae.cfg.d_model == MODEL_D, msg
 
     return LoadedModels(
         run_dpath=run_dpath,
-        n_patches=md.content_tokens_per_example,
-        d_model=md.d_model,
+        n_patches=N_CONTENT_TOKENS,
+        d_model=MODEL_D,
         d_sae=sae.cfg.d_sae,
         preprocess=preprocess,
         resize=resize,
@@ -241,7 +229,7 @@ def run_app() -> None:
 
     st.title("SAE Feature Activations")
     st.caption(
-        "Load an SAE run checkpoint, compute sparse features for images in demo_imgs, and browse top-activating images per feature."
+        "Load an SAE checkpoint, compute sparse features for images in demo_imgs, and browse top-activating images per feature."
     )
 
     default_run = "./saev/runs/inat"
